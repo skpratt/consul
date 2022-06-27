@@ -1,6 +1,7 @@
 package proxycfg
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -234,10 +235,14 @@ func TestManager_BasicLifecycle(t *testing.T) {
 						PeerUpstreamEndpoints:             map[UpstreamID]structs.CheckServiceNodes{},
 						PeerUpstreamEndpointsUseHostnames: map[UpstreamID]struct{}{},
 					},
-					PreparedQueryEndpoints: map[UpstreamID]structs.CheckServiceNodes{},
-					WatchedServiceChecks:   map[structs.ServiceID][]structs.CheckType{},
-					Intentions:             TestIntentions(),
-					IntentionsSet:          true,
+					PreparedQueryEndpoints:      map[UpstreamID]structs.CheckServiceNodes{},
+					DestinationsUpstream:        map[UpstreamID]structs.ConfigEntry{},
+					WatchedDestinationsUpstream: map[UpstreamID]context.CancelFunc{},
+					WatchedDestinationGateways:  map[UpstreamID]context.CancelFunc{},
+					DestinationGateways:         map[UpstreamID]structs.ServiceNodes{},
+					WatchedServiceChecks:        map[structs.ServiceID][]structs.CheckType{},
+					Intentions:                  TestIntentions(),
+					IntentionsSet:               true,
 				},
 				Datacenter: "dc1",
 				Locality:   GatewayKey{Datacenter: "dc1", Partition: acl.PartitionOrDefault("")},
@@ -295,10 +300,14 @@ func TestManager_BasicLifecycle(t *testing.T) {
 						PeerUpstreamEndpoints:             map[UpstreamID]structs.CheckServiceNodes{},
 						PeerUpstreamEndpointsUseHostnames: map[UpstreamID]struct{}{},
 					},
-					PreparedQueryEndpoints: map[UpstreamID]structs.CheckServiceNodes{},
-					WatchedServiceChecks:   map[structs.ServiceID][]structs.CheckType{},
-					Intentions:             TestIntentions(),
-					IntentionsSet:          true,
+					PreparedQueryEndpoints:      map[UpstreamID]structs.CheckServiceNodes{},
+					DestinationsUpstream:        map[UpstreamID]structs.ConfigEntry{},
+					WatchedDestinationsUpstream: map[UpstreamID]context.CancelFunc{},
+					WatchedDestinationGateways:  map[UpstreamID]context.CancelFunc{},
+					WatchedServiceChecks:        map[structs.ServiceID][]structs.CheckType{},
+					DestinationGateways:         map[UpstreamID]structs.ServiceNodes{},
+					Intentions:                  TestIntentions(),
+					IntentionsSet:               true,
 				},
 				Datacenter: "dc1",
 				Locality:   GatewayKey{Datacenter: "dc1", Partition: acl.PartitionOrDefault("")},
