@@ -391,11 +391,11 @@ func (s *ResourceGenerator) listenersFromSnapshotConnectProxy(cfgSnap *proxycfg.
 			if err != nil {
 				return nil, err
 			}
-			outboundListener.FilterChains = append(outboundListener.FilterChains, filterChain)
+			outboundListener.DefaultFilterChain = filterChain
 		}
 
 		// Only add the outbound listener if configured.
-		if len(outboundListener.FilterChains) > 0 {
+		if len(outboundListener.FilterChains) > 0 || outboundListener.DefaultFilterChain != nil {
 			resources = append(resources, outboundListener)
 		}
 	}
