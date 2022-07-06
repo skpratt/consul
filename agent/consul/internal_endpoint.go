@@ -484,7 +484,7 @@ func (m *Internal) ServiceGateways(args *structs.ServiceSpecificRequest, reply *
 		&reply.QueryMeta,
 		func(ws memdb.WatchSet, state *state.Store) error {
 			var maxIdx uint64
-			idx, gateways, err := state.ServiceGateways(ws, args.ServiceName, &args.EnterpriseMeta, args.PeerName)
+			idx, gateways, err := state.ServiceGateways(ws, args.ServiceName, args.EnterpriseMeta)
 			if err != nil {
 				return err
 			}

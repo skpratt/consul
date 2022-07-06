@@ -113,7 +113,7 @@ func (s *handlerConnectProxy) initialize(ctx context.Context) (ConfigSnapshot, e
 		if err != nil {
 			return snap, err
 		}
-		// When in transparent proxy we will infer upstreams from intentions with this source
+		// We also infer upstreams from destinations (egress points)
 		err = s.dataSources.IntentionUpstreamsDestination.Notify(ctx, &structs.ServiceSpecificRequest{
 			Datacenter:     s.source.Datacenter,
 			QueryOptions:   structs.QueryOptions{Token: s.token},
@@ -436,7 +436,6 @@ func (s *handlerConnectProxy) handleUpdate(ctx context.Context, u UpdateEvent, s
 		if !ok {
 			return fmt.Errorf("invalid type for response %T", u.Result)
 		}
-		// Get information about the entire service mesh.
 		seenUpstreams := make(map[UpstreamID]struct{})
 		for _, svc := range resp.Services {
 			uid := NewUpstreamIDFromServiceName(svc)
@@ -447,17 +446,20 @@ func (s *handlerConnectProxy) handleUpdate(ctx context.Context, u UpdateEvent, s
 				Name:           svc.Name,
 				Datacenter:     s.source.Datacenter,
 				QueryOptions:   structs.QueryOptions{Token: s.token},
-				EnterpriseMeta: *structs.DefaultEnterpriseMetaInPartition(s.proxyID.PartitionOrDefault()),
+				EnterpriseMeta: svc.EnterpriseMeta,
 			}, DestinationConfigEntryID+NewUpstreamIDFromServiceName(svc).String(), s.ch)
 			if err != nil {
 				cancel()
 				return err
 			}
+			snap.ConnectProxy.WatchedDestinationsUpstream[uid] = cancel
+
+			ctx, cancel = context.WithCancel(ctx)
 			err = s.dataSources.ServiceGateways.Notify(ctx, &structs.ServiceSpecificRequest{
 				ServiceName:    svc.Name,
 				Datacenter:     s.source.Datacenter,
 				QueryOptions:   structs.QueryOptions{Token: s.token},
-				EnterpriseMeta: *structs.DefaultEnterpriseMetaInPartition(s.proxyID.PartitionOrDefault()),
+				EnterpriseMeta: svc.EnterpriseMeta,
 			}, DestinationGatewayID+NewUpstreamIDFromServiceName(svc).String(), s.ch)
 			if err != nil {
 				cancel()

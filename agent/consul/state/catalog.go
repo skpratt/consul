@@ -2908,13 +2908,13 @@ func (s *Store) GatewayServices(ws memdb.WatchSet, gateway string, entMeta *acl.
 }
 
 // ServiceGateways is used to query all gateways associated with a service
-func (s *Store) ServiceGateways(ws memdb.WatchSet, service string, entMeta *acl.EnterpriseMeta, peerName string) (uint64, structs.ServiceNodes, error) {
+func (s *Store) ServiceGateways(ws memdb.WatchSet, service string, entMeta acl.EnterpriseMeta) (uint64, structs.ServiceNodes, error) {
 	var results structs.ServiceNodes
 
 	tx := s.db.Txn(false)
 	defer tx.Abort()
 
-	iter, err := tx.Get(tableGatewayServices, indexService, structs.NewServiceName(service, entMeta))
+	iter, err := tx.Get(tableGatewayServices, indexService, structs.NewServiceName(service, &entMeta))
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed gateway services lookup: %s", err)
 	}
@@ -2922,10 +2922,11 @@ func (s *Store) ServiceGateways(ws memdb.WatchSet, service string, entMeta *acl.
 
 	for obj := iter.Next(); obj != nil; obj = iter.Next() {
 		gs := obj.(*structs.GatewayService)
+		// tableGatewayServices is not peer-aware and the existence of TG/IG gateways is scrubbed during peer replication
 		q := Query{
 			Value:          gs.Gateway.Name,
 			EnterpriseMeta: gs.Gateway.EnterpriseMeta,
-			PeerName:       peerName,
+			PeerName:       structs.DefaultPeerKeyword,
 		}
 		iterService, err := tx.Get(tableServices, indexService, q)
 
@@ -2938,11 +2939,8 @@ func (s *Store) ServiceGateways(ws memdb.WatchSet, service string, entMeta *acl.
 		}
 
 	}
-	meta := structs.DefaultEnterpriseMetaInDefaultPartition()
-	if entMeta != nil {
-		meta = entMeta
-	}
-	results, err = parseServiceNodes(tx, ws, results, meta, peerName)
+
+	results, err = parseServiceNodes(tx, ws, results, &entMeta, structs.DefaultPeerKeyword)
 	if err != nil {
 		return 0, nil, err
 	}

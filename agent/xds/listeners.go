@@ -506,14 +506,14 @@ func makeFilterChainMatchFromAddrs(addrs map[string]struct{}) *envoy_listener_v3
 	}
 }
 
-func makeFilterChainMatchFromAddressWithPort(address string, Port int) *envoy_listener_v3.FilterChainMatch {
+func makeFilterChainMatchFromAddressWithPort(address string, port int) *envoy_listener_v3.FilterChainMatch {
 	ranges := make([]*envoy_core_v3.CidrRange, 0)
 
 	ip := net.ParseIP(address)
 	if ip == nil {
 		return &envoy_listener_v3.FilterChainMatch{
 			ServerNames:     []string{address},
-			DestinationPort: &wrappers.UInt32Value{Value: uint32(Port)},
+			DestinationPort: &wrappers.UInt32Value{Value: uint32(port)},
 		}
 	}
 
@@ -528,7 +528,7 @@ func makeFilterChainMatchFromAddressWithPort(address string, Port int) *envoy_li
 
 	return &envoy_listener_v3.FilterChainMatch{
 		PrefixRanges:    ranges,
-		DestinationPort: &wrappers.UInt32Value{Value: uint32(Port)},
+		DestinationPort: &wrappers.UInt32Value{Value: uint32(port)},
 	}
 }
 

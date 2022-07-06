@@ -5407,7 +5407,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 
 	// Read everything back.
 	ws = memdb.NewWatchSet()
-	idx, out, err := s.ServiceGateways(ws, "db", nil, "")
+	idx, out, err := s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(21))
 	assert.Len(t, out, 1)
@@ -5448,7 +5448,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	}))
 	assert.False(t, watchFired(ws))
 
-	idx, out, err = s.ServiceGateways(ws, "api", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "api", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(21))
 	assert.Len(t, out, 1)
@@ -5502,7 +5502,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 
 	// Read everything back.
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "db", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(22))
 	assert.Len(t, out, 1)
@@ -5532,7 +5532,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	assert.Nil(t, s.EnsureService(23, "bar", &structs.NodeService{ID: "redis", Service: "redis", Tags: nil, Address: "", Port: 6379}))
 
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "redis", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "redis", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(23))
 	assert.Len(t, out, 1)
@@ -5563,7 +5563,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	assert.True(t, watchFired(ws))
 
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "bar", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "bar", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(24))
 	assert.Len(t, out, 0)
@@ -5580,7 +5580,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	}))
 	assert.True(t, watchFired(ws))
 
-	idx, out, err = s.ServiceGateways(ws, "db", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(25))
 	assert.Len(t, out, 1)
@@ -5619,7 +5619,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	}))
 	assert.Nil(t, s.EnsureService(20, "baz", &structs.NodeService{Kind: structs.ServiceKindTerminatingGateway, ID: "gateway2", Service: "gateway2", Port: 443}))
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "db", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(26))
 	assert.Len(t, out, 2)
@@ -5666,7 +5666,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	assert.Nil(t, s.DeleteConfigEntry(27, "terminating-gateway", "gateway", nil))
 	assert.True(t, watchFired(ws))
 
-	idx, out, err = s.ServiceGateways(ws, "gateway", nil, "")
+	idx, out, err = s.ServiceGateways(ws, "gateway", *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
 	assert.Equal(t, idx, uint64(27))
 	assert.Len(t, out, 0)
