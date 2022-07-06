@@ -870,9 +870,9 @@ Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'."
       [`acl.tokens.initial_management`](#acl_tokens_initial_management).**
 
     - `default` ((#acl_tokens_default)) - When provided, the agent will
-      use this token when making requests to the Consul servers. Clients can override
-      this token on a per-request basis by providing the "?token" query parameter.
-      When not provided, the empty token, which maps to the 'anonymous' ACL token,
+      use this token when making requests to the Consul servers.
+      Clients can [override this token on a per-request basis](/api-docs#authentication).
+      When not overridden, the empty token, which maps to the 'anonymous' ACL token,
       is used.
 
     - `agent` ((#acl_tokens_agent)) - Used for clients and servers to perform
@@ -994,9 +994,9 @@ Valid time units are 'ns', 'us' (or 'µs'), 'ms', 's', 'm', 'h'."
 
 - `acl_token` ((#acl_token_legacy)) - **Deprecated in Consul 1.4.0. See
   the [`acl.tokens.default`](#acl_tokens_default) field instead.** When provided,
-  the agent will use this token when making requests to the Consul servers. Clients
-  can override this token on a per-request basis by providing the "?token" query
-  parameter. When not provided, the empty token, which maps to the 'anonymous' ACL
+  the agent will use this token when making requests to the Consul servers.
+  Clients can [override this token on a per-request basis](/api-docs#authentication).
+  When not overridden, the empty token, which maps to the 'anonymous' ACL
   policy, is used.
 
 - `acl_ttl` ((#acl_ttl_legacy)) - **Deprecated in Consul 1.4.0. See the
