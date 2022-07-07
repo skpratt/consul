@@ -2841,17 +2841,18 @@ func TestInternal_ServiceGatewayService_Terminating(t *testing.T) {
 		arg := structs.RegisterRequest{
 			Datacenter: "dc1",
 			Node:       "foo",
-			Address:    "127.0.0.1",
+			Address:    "10.1.2.2",
 			Service: &structs.NodeService{
-				ID:      "terminating-gateway",
+				ID:      "terminating-gateway-01",
 				Service: "terminating-gateway",
 				Kind:    structs.ServiceKindTerminatingGateway,
 				Port:    443,
+				Address: "198.18.1.3",
 			},
 			Check: &structs.HealthCheck{
 				Name:      "terminating connect",
 				Status:    api.HealthPassing,
-				ServiceID: "terminating-gateway",
+				ServiceID: "terminating-gateway-01",
 			},
 		}
 		var out struct{}
@@ -2915,40 +2916,62 @@ func TestInternal_ServiceGatewayService_Terminating(t *testing.T) {
 		require.True(t, configOutput)
 	}
 
-	var out structs.IndexedServiceNodes
+	var out structs.IndexedCheckServiceNodes
 	req := structs.ServiceSpecificRequest{
 		Datacenter:  "dc1",
 		ServiceName: "db",
+		ServiceKind: structs.ServiceKindTerminatingGateway,
 	}
 	require.NoError(t, msgpackrpc.CallWithCodec(codec, "Internal.ServiceGateways", &req, &out))
 
-	serviceNodes := out.ServiceNodes
-
-	for _, n := range serviceNodes {
-		n.RaftIndex = structs.RaftIndex{}
+	for _, n := range out.Nodes {
+		n.Node.RaftIndex = structs.RaftIndex{}
+		n.Service.RaftIndex = structs.RaftIndex{}
+		for _, m := range n.Checks {
+			m.RaftIndex = structs.RaftIndex{}
+		}
 	}
 
-	expect := structs.ServiceNodes{
-		{
-			Node:        "foo",
-			ServiceKind: structs.ServiceKindTerminatingGateway,
-			ServiceName: "terminating-gateway",
-			ServiceID:   "terminating-gateway",
-			ServiceTaggedAddresses: map[string]structs.ServiceAddress{
-				"consul-virtual:" + db.CompoundServiceName().String():    {Address: "240.0.0.1"},
-				"consul-virtual:" + redis.CompoundServiceName().String(): {Address: "240.0.0.2"},
+	expect := structs.CheckServiceNodes{
+		structs.CheckServiceNode{
+			Node: &structs.Node{
+				Node:       "foo",
+				RaftIndex:  structs.RaftIndex{},
+				Address:    "10.1.2.2",
+				Datacenter: "dc1",
+				Partition:  acl.DefaultPartitionName,
 			},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServicePort:    443,
-			ServiceTags:    []string{},
-			ServiceMeta:    map[string]string{},
-			EnterpriseMeta: *acl.DefaultEnterpriseMeta(),
-			RaftIndex:      structs.RaftIndex{},
-			Address:        "127.0.0.1",
-			Datacenter:     "dc1",
+			Service: &structs.NodeService{
+				Kind:    structs.ServiceKindTerminatingGateway,
+				ID:      "terminating-gateway-01",
+				Service: "terminating-gateway",
+				TaggedAddresses: map[string]structs.ServiceAddress{
+					"consul-virtual:" + db.CompoundServiceName().String():    {Address: "240.0.0.1"},
+					"consul-virtual:" + redis.CompoundServiceName().String(): {Address: "240.0.0.2"},
+				},
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				Tags:           []string{},
+				Meta:           map[string]string{},
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				RaftIndex:      structs.RaftIndex{},
+				Address:        "198.18.1.3",
+			},
+			Checks: structs.HealthChecks{
+				&structs.HealthCheck{
+					Name:           "terminating connect",
+					Node:           "foo",
+					CheckID:        "terminating connect",
+					Status:         api.HealthPassing,
+					ServiceID:      "terminating-gateway-01",
+					ServiceName:    "terminating-gateway",
+					EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				},
+			},
 		},
 	}
-	assert.Equal(t, expect, serviceNodes)
+
+	assert.Equal(t, expect, out.Nodes)
 }
 
 func TestInternal_ServiceGatewayService_Terminating_ACL(t *testing.T) {
@@ -3099,12 +3122,13 @@ func TestInternal_ServiceGatewayService_Terminating_ACL(t *testing.T) {
 		require.True(t, out)
 	}
 
-	var out structs.IndexedServiceNodes
+	var out structs.IndexedCheckServiceNodes
 
 	// Not passing a token with service:read on Gateway leads to PermissionDenied
 	req := structs.ServiceSpecificRequest{
 		Datacenter:  "dc1",
 		ServiceName: "db",
+		ServiceKind: structs.ServiceKindTerminatingGateway,
 	}
 	err = msgpackrpc.CallWithCodec(codec, "Internal.ServiceGateways", &req, &out)
 	require.Error(t, err, acl.ErrPermissionDenied)
@@ -3113,16 +3137,17 @@ func TestInternal_ServiceGatewayService_Terminating_ACL(t *testing.T) {
 	req = structs.ServiceSpecificRequest{
 		Datacenter:   "dc1",
 		ServiceName:  "db",
+		ServiceKind:  structs.ServiceKindTerminatingGateway,
 		QueryOptions: structs.QueryOptions{Token: token.SecretID},
 	}
 	require.NoError(t, msgpackrpc.CallWithCodec(codec, "Internal.ServiceGateways", &req, &out))
 
-	nodes := out.ServiceNodes
+	nodes := out.Nodes
 	require.Len(t, nodes, 1)
-	require.Equal(t, "foo", nodes[0].Node)
-	require.Equal(t, structs.ServiceKindTerminatingGateway, nodes[0].ServiceKind)
-	require.Equal(t, "terminating-gateway", nodes[0].ServiceName)
-	require.Equal(t, "terminating-gateway", nodes[0].ServiceID)
+	require.Equal(t, "foo", nodes[0].Node.Node)
+	require.Equal(t, structs.ServiceKindTerminatingGateway, nodes[0].Service.Kind)
+	require.Equal(t, "terminating-gateway", nodes[0].Service.Service)
+	require.Equal(t, "terminating-gateway", nodes[0].Service.ID)
 	require.True(t, out.QueryMeta.ResultsFilteredByACLs, "ResultsFilteredByACLs should be true")
 }
 
@@ -3203,37 +3228,62 @@ func TestInternal_ServiceGatewayService_Terminating_Destination(t *testing.T) {
 		require.True(t, configOutput)
 	}
 
-	var out structs.IndexedServiceNodes
+	var out structs.IndexedCheckServiceNodes
 	req := structs.ServiceSpecificRequest{
 		Datacenter:  "dc1",
 		ServiceName: "google",
+		ServiceKind: structs.ServiceKindTerminatingGateway,
 	}
 	require.NoError(t, msgpackrpc.CallWithCodec(codec, "Internal.ServiceGateways", &req, &out))
 
-	serviceNodes := out.ServiceNodes
+	nodes := out.Nodes
 
-	for _, n := range serviceNodes {
-		n.RaftIndex = structs.RaftIndex{}
+	for _, n := range nodes {
+		n.Node.RaftIndex = structs.RaftIndex{}
+		n.Service.RaftIndex = structs.RaftIndex{}
+		for _, m := range n.Checks {
+			m.RaftIndex = structs.RaftIndex{}
+		}
 	}
 
-	expect := structs.ServiceNodes{
-		{
-			Node:        "foo",
-			ServiceKind: structs.ServiceKindTerminatingGateway,
-			ServiceName: "terminating-gateway",
-			ServiceID:   "terminating-gateway",
-			ServiceTaggedAddresses: map[string]structs.ServiceAddress{
-				"consul-virtual:" + google.CompoundServiceName().String(): {Address: "240.0.0.1"},
+	expect := structs.CheckServiceNodes{
+		structs.CheckServiceNode{
+			Node: &structs.Node{
+				Node:       "foo",
+				RaftIndex:  structs.RaftIndex{},
+				Address:    "127.0.0.1",
+				Datacenter: "dc1",
+				Partition:  acl.DefaultPartitionName,
 			},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServicePort:    443,
-			ServiceTags:    []string{},
-			ServiceMeta:    map[string]string{},
-			Address:        "127.0.0.1",
-			Datacenter:     "dc1",
-			EnterpriseMeta: *acl.DefaultEnterpriseMeta(),
-			RaftIndex:      structs.RaftIndex{},
+			Service: &structs.NodeService{
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "terminating-gateway",
+				Service:        "terminating-gateway",
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				Tags:           []string{},
+				Meta:           map[string]string{},
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				TaggedAddresses: map[string]structs.ServiceAddress{
+					"consul-virtual:" + google.CompoundServiceName().String(): {Address: "240.0.0.1"},
+				},
+				RaftIndex: structs.RaftIndex{},
+				Address:   "",
+			},
+			Checks: structs.HealthChecks{
+				&structs.HealthCheck{
+					Name:           "terminating connect",
+					Node:           "foo",
+					CheckID:        "terminating connect",
+					Status:         api.HealthPassing,
+					ServiceID:      "terminating-gateway",
+					ServiceName:    "terminating-gateway",
+					EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				},
+			},
 		},
 	}
-	assert.Equal(t, expect, serviceNodes)
+
+	assert.Len(t, nodes, 1)
+	assert.Equal(t, expect, nodes)
 }

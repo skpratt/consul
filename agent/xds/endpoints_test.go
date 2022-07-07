@@ -483,6 +483,10 @@ func TestEndpointsFromSnapshot(t *testing.T) {
 			name:   "ingress-multiple-listeners-duplicate-service",
 			create: proxycfg.TestConfigSnapshotIngress_MultipleListenersDuplicateService,
 		},
+		{
+			name:   "transparent-proxy-destination",
+			create: proxycfg.TestConfigSnapshotTransparentProxyDestination,
+		},
 	}
 
 	latestEnvoyVersion := proxysupport.EnvoyVersions[0]

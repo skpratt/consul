@@ -2414,7 +2414,7 @@ func TestState_WatchesAndUpdates(t *testing.T) {
 						require.True(t, snap.Valid(), "proxy with roots/leaf/intentions is valid")
 						require.Equal(t, indexedRoots, snap.Roots)
 						require.Equal(t, issuedCert, snap.Leaf())
-						require.Equal(t, TestIntentions().Matches[0], snap.ConnectProxy.Intentions)
+						require.Equal(t, TestIntentions(), snap.ConnectProxy.Intentions)
 						require.True(t, snap.MeshGateway.isEmpty())
 						require.True(t, snap.IngressGateway.isEmpty())
 						require.True(t, snap.TerminatingGateway.isEmpty())
@@ -2462,11 +2462,20 @@ func TestState_WatchesAndUpdates(t *testing.T) {
 						},
 						{
 							CorrelationID: DestinationGatewayID + dbUID.String(),
-							Result: &structs.IndexedServiceNodes{
-								ServiceNodes: []*structs.ServiceNode{
-									{ServiceName: "gtwy1", TaggedAddresses: map[string]string{
-										structs.ServiceGatewayVirtualIPTag(structs.ServiceName{Name: "db", EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition()}): "172.0.0.1"},
+							Result: &structs.CheckServiceNodes{
+								{
+									Node: &structs.Node{
+										Node:       "foo",
+										Partition:  api.PartitionOrDefault(),
+										Datacenter: "dc1",
 									},
+									Service: &structs.NodeService{
+										Service: "gtwy1",
+										TaggedAddresses: map[string]structs.ServiceAddress{
+											structs.ServiceGatewayVirtualIPTag(structs.ServiceName{Name: "db", EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition()}): {Address: "172.0.0.1", Port: 443},
+										},
+									},
+									Checks: structs.HealthChecks{},
 								},
 							},
 							Err: nil,

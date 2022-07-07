@@ -1,6 +1,7 @@
 package proxycfg
 
 import (
+	"github.com/hashicorp/consul/api"
 	"time"
 
 	"github.com/mitchellh/go-testing-interface"
@@ -572,14 +573,29 @@ func TestConfigSnapshotTransparentProxyDestination(t testing.T) *ConfigSnapshot 
 		},
 		{
 			CorrelationID: DestinationGatewayID + googleUID.String(),
-			Result: &structs.IndexedServiceNodes{
-				ServiceNodes: []*structs.ServiceNode{
-					{
-						Node:        "node1",
-						ServiceName: "tgtw1",
-						ServiceKind: structs.ServiceKindTerminatingGateway,
-						ServiceTaggedAddresses: map[string]structs.ServiceAddress{
-							structs.TaggedAddressLANIPv4: {Address: "172.168.0.1", Port: 8443},
+			Result: &structs.CheckServiceNodes{
+				{
+					Node: &structs.Node{
+						Node:       "node1",
+						Address:    "172.168.0.1",
+						Datacenter: "dc1",
+					},
+					Service: &structs.NodeService{
+						ID:      "tgtw1",
+						Address: "172.168.0.1",
+						Port:    8443,
+						Kind:    structs.ServiceKindTerminatingGateway,
+						TaggedAddresses: map[string]structs.ServiceAddress{
+							structs.TaggedAddressLANIPv4:   {Address: "172.168.0.1", Port: 8443},
+							structs.TaggedAddressVirtualIP: {Address: "240.0.0.1"},
+						},
+					},
+					Checks: []*structs.HealthCheck{
+						{
+							Node:        "node1",
+							ServiceName: "tgtw",
+							Name:        "force",
+							Status:      api.HealthPassing,
 						},
 					},
 				},
@@ -587,14 +603,29 @@ func TestConfigSnapshotTransparentProxyDestination(t testing.T) *ConfigSnapshot 
 		},
 		{
 			CorrelationID: DestinationGatewayID + kafkaUID.String(),
-			Result: &structs.IndexedServiceNodes{
-				ServiceNodes: []*structs.ServiceNode{
-					{
-						Node:        "node1",
-						ServiceName: "tgtw1",
-						ServiceKind: structs.ServiceKindTerminatingGateway,
-						ServiceTaggedAddresses: map[string]structs.ServiceAddress{
-							structs.TaggedAddressLANIPv4: {Address: "172.168.0.1", Port: 8443},
+			Result: &structs.CheckServiceNodes{
+				{
+					Node: &structs.Node{
+						Node:       "node1",
+						Address:    "172.168.0.1",
+						Datacenter: "dc1",
+					},
+					Service: &structs.NodeService{
+						ID:      "tgtw1",
+						Address: "172.168.0.1",
+						Port:    8443,
+						Kind:    structs.ServiceKindTerminatingGateway,
+						TaggedAddresses: map[string]structs.ServiceAddress{
+							structs.TaggedAddressLANIPv4:   {Address: "172.168.0.1", Port: 8443},
+							structs.TaggedAddressVirtualIP: {Address: "240.0.0.1"},
+						},
+					},
+					Checks: []*structs.HealthCheck{
+						{
+							Node:        "node1",
+							ServiceName: "tgtw",
+							Name:        "force",
+							Status:      api.HealthPassing,
 						},
 					},
 				},

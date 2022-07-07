@@ -454,7 +454,7 @@ func (m *Internal) GatewayServiceDump(args *structs.ServiceSpecificRequest, repl
 }
 
 // ServiceGateways returns all the nodes for services associated with a gateway along with their gateway config
-func (m *Internal) ServiceGateways(args *structs.ServiceSpecificRequest, reply *structs.IndexedServiceNodes) error {
+func (m *Internal) ServiceGateways(args *structs.ServiceSpecificRequest, reply *structs.IndexedCheckServiceNodes) error {
 	if done, err := m.srv.ForwardRPC("Internal.ServiceGateways", args, reply); done {
 		return err
 	}
@@ -484,7 +484,7 @@ func (m *Internal) ServiceGateways(args *structs.ServiceSpecificRequest, reply *
 		&reply.QueryMeta,
 		func(ws memdb.WatchSet, state *state.Store) error {
 			var maxIdx uint64
-			idx, gateways, err := state.ServiceGateways(ws, args.ServiceName, args.EnterpriseMeta)
+			idx, gateways, err := state.ServiceGateways(ws, args.ServiceName, args.ServiceKind, args.EnterpriseMeta)
 			if err != nil {
 				return err
 			}
@@ -492,7 +492,7 @@ func (m *Internal) ServiceGateways(args *structs.ServiceSpecificRequest, reply *
 				maxIdx = idx
 			}
 
-			reply.Index, reply.ServiceNodes = maxIdx, gateways
+			reply.Index, reply.Nodes = maxIdx, gateways
 
 			if err := m.srv.filterACL(args.Token, reply); err != nil {
 				return err

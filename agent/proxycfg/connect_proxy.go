@@ -34,7 +34,7 @@ func (s *handlerConnectProxy) initialize(ctx context.Context) (ConfigSnapshot, e
 	snap.ConnectProxy.PassthroughIndices = make(map[string]indexedTarget)
 	snap.ConnectProxy.PeerUpstreamEndpoints = make(map[UpstreamID]structs.CheckServiceNodes)
 	snap.ConnectProxy.WatchedDestinationsUpstream = make(map[UpstreamID]context.CancelFunc)
-	snap.ConnectProxy.DestinationGateways = make(map[UpstreamID]structs.ServiceNodes)
+	snap.ConnectProxy.DestinationGateways = make(map[UpstreamID]structs.CheckServiceNodes)
 	snap.ConnectProxy.WatchedDestinationGateways = make(map[UpstreamID]context.CancelFunc)
 	snap.ConnectProxy.PeerUpstreamEndpointsUseHostnames = make(map[UpstreamID]struct{})
 	snap.ConnectProxy.WatchedDestinationsUpstream = make(map[UpstreamID]context.CancelFunc)
@@ -460,6 +460,7 @@ func (s *handlerConnectProxy) handleUpdate(ctx context.Context, u UpdateEvent, s
 				Datacenter:     s.source.Datacenter,
 				QueryOptions:   structs.QueryOptions{Token: s.token},
 				EnterpriseMeta: svc.EnterpriseMeta,
+				ServiceKind:    structs.ServiceKindTerminatingGateway,
 			}, DestinationGatewayID+NewUpstreamIDFromServiceName(svc).String(), s.ch)
 			if err != nil {
 				cancel()
@@ -496,14 +497,14 @@ func (s *handlerConnectProxy) handleUpdate(ctx context.Context, u UpdateEvent, s
 		uid := UpstreamIDFromString(pq)
 		snap.ConnectProxy.DestinationsUpstream[uid] = resp.Entry
 	case strings.HasPrefix(u.CorrelationID, DestinationGatewayID):
-		resp, ok := u.Result.(*structs.IndexedServiceNodes)
+		resp, ok := u.Result.(*structs.IndexedCheckServiceNodes)
 		if !ok {
 			return fmt.Errorf("invalid type for response: %T", u.Result)
 		}
 
 		pq := strings.TrimPrefix(u.CorrelationID, DestinationGatewayID)
 		uid := UpstreamIDFromString(pq)
-		snap.ConnectProxy.DestinationGateways[uid] = resp.ServiceNodes
+		snap.ConnectProxy.DestinationGateways[uid] = resp.Nodes
 
 	case strings.HasPrefix(u.CorrelationID, "upstream:"+preparedQueryIDPrefix):
 		resp, ok := u.Result.(*structs.PreparedQueryExecuteResponse)

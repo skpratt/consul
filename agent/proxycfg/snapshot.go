@@ -142,7 +142,7 @@ type configSnapshotConnectProxy struct {
 	IntentionsSet               bool
 	DestinationsUpstream        map[UpstreamID]structs.ConfigEntry
 	WatchedDestinationsUpstream map[UpstreamID]context.CancelFunc
-	DestinationGateways         map[UpstreamID]structs.ServiceNodes
+	DestinationGateways         map[UpstreamID]structs.CheckServiceNodes
 	WatchedDestinationGateways  map[UpstreamID]context.CancelFunc
 }
 
@@ -162,6 +162,8 @@ func (c *configSnapshotConnectProxy) isEmpty() bool {
 		len(c.WatchedGateways) == 0 &&
 		len(c.WatchedGatewayEndpoints) == 0 &&
 		len(c.WatchedServiceChecks) == 0 &&
+		len(c.WatchedDestinationsUpstream) == 0 &&
+		len(c.WatchedDestinationGateways) == 0 &&
 		len(c.PreparedQueryEndpoints) == 0 &&
 		len(c.UpstreamConfig) == 0 &&
 		len(c.PassthroughUpstreams) == 0 &&

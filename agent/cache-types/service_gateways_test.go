@@ -16,7 +16,7 @@ func TestServiceGateways(t *testing.T) {
 
 	// Expect the proper RPC call. This also sets the expected value
 	// since that is return-by-pointer in the arguments.
-	var resp *structs.IndexedServiceNodes
+	var resp *structs.IndexedCheckServiceNodes
 	rpc.On("RPC", "Internal.ServiceGateways", mock.Anything, mock.Anything).Return(nil).
 		Run(func(args mock.Arguments) {
 			req := args.Get(1).(*structs.ServiceSpecificRequest)
@@ -25,13 +25,16 @@ func TestServiceGateways(t *testing.T) {
 			require.True(t, req.AllowStale)
 			require.Equal(t, "foo", req.ServiceName)
 
-			services := structs.ServiceNodes{
+			nodes := []structs.CheckServiceNode{
 				{
-					ServiceTags: req.ServiceTags,
+					Service: &structs.NodeService{
+						Tags: req.ServiceTags,
+					},
 				},
 			}
-			reply := args.Get(2).(*structs.IndexedServiceNodes)
-			reply.ServiceNodes = services
+
+			reply := args.Get(2).(*structs.IndexedCheckServiceNodes)
+			reply.Nodes = nodes
 			reply.QueryMeta.Index = 48
 			resp = reply
 		})

@@ -274,72 +274,61 @@ func makePassthroughClusters(cfgSnap *proxycfg.ConfigSnapshot) ([]proto.Message,
 		if !ok {
 			continue
 		}
-		gateways, ok := cfgSnap.ConnectProxy.DestinationGateways[uid]
-		if !ok {
-			continue
-		}
-		for _, gateway := range gateways {
 
-			// Only  terminating gateways are supported for destinations
-			if gateway.ServiceKind != structs.ServiceKindTerminatingGateway {
-				continue
-			}
-			gatewayAddress, ok := gateway.ServiceTaggedAddresses[structs.TaggedAddressLANIPv4]
-			if !ok {
-				continue
-			}
-			sni := connect.ServiceSNI(
-				uid.Name, "", uid.NamespaceOrDefault(), uid.PartitionOrDefault(), cfgSnap.Datacenter, cfgSnap.Roots.TrustDomain)
-			name := clusterNameForDestination(cfgSnap, uid)
+		sni := connect.ServiceSNI(
+			uid.Name, "", uid.NamespaceOrDefault(), uid.PartitionOrDefault(), cfgSnap.Datacenter, cfgSnap.Roots.TrustDomain)
+		name := clusterNameForDestination(cfgSnap, uid)
 
-			c := envoy_cluster_v3.Cluster{
-				Name: name,
-				ClusterDiscoveryType: &envoy_cluster_v3.Cluster_Type{
-					Type: envoy_cluster_v3.Cluster_STATIC,
+		cluster := &envoy_cluster_v3.Cluster{
+			Name:           name,
+			AltStatName:    name,
+			ConnectTimeout: durationpb.New(5 * time.Second),
+			CommonLbConfig: &envoy_cluster_v3.Cluster_CommonLbConfig{
+				HealthyPanicThreshold: &envoy_type_v3.Percent{
+					Value: 0, // disable panic threshold
 				},
-				ConnectTimeout: durationpb.New(5 * time.Second),
-			}
-			endpoints := []*envoy_endpoint_v3.LbEndpoint{
-				makeEndpoint(gatewayAddress.Address, gatewayAddress.Port),
-			}
-
-			c.LoadAssignment = &envoy_endpoint_v3.ClusterLoadAssignment{
-				ClusterName: c.Name,
-				Endpoints: []*envoy_endpoint_v3.LocalityLbEndpoints{
-					{
-						LbEndpoints: endpoints,
+			},
+			ClusterDiscoveryType: &envoy_cluster_v3.Cluster_Type{Type: envoy_cluster_v3.Cluster_EDS},
+			EdsClusterConfig: &envoy_cluster_v3.Cluster_EdsClusterConfig{
+				EdsConfig: &envoy_core_v3.ConfigSource{
+					ResourceApiVersion: envoy_core_v3.ApiVersion_V3,
+					ConfigSourceSpecifier: &envoy_core_v3.ConfigSource_Ads{
+						Ads: &envoy_core_v3.AggregatedConfigSource{},
 					},
 				},
-			}
-
-			spiffeID := connect.SpiffeIDService{
-				Host:       cfgSnap.Roots.TrustDomain,
-				Partition:  uid.PartitionOrDefault(),
-				Namespace:  uid.NamespaceOrDefault(),
-				Datacenter: cfgSnap.Datacenter,
-				Service:    uid.Name,
-			}
-
-			commonTLSContext := makeCommonTLSContext(
-				cfgSnap.Leaf(),
-				cfgSnap.RootPEMs(),
-				makeTLSParametersFromProxyTLSConfig(cfgSnap.MeshConfigTLSOutgoing()),
-			)
-			err := injectSANMatcher(commonTLSContext, spiffeID.URI().String())
-			if err != nil {
-				return nil, fmt.Errorf("failed to inject SAN matcher rules for cluster %q: %v", sni, err)
-			}
-			tlsContext := envoy_tls_v3.UpstreamTlsContext{
-				CommonTlsContext: commonTLSContext,
-				Sni:              sni,
-			}
-			transportSocket, err := makeUpstreamTLSTransportSocket(&tlsContext)
-			if err != nil {
-				return nil, err
-			}
-			c.TransportSocket = transportSocket
-			clusters = append(clusters, &c)
+			},
+			// Endpoints are managed separately by EDS
+			// Having an empty config enables outlier detection with default config.
+			OutlierDetection: &envoy_cluster_v3.OutlierDetection{},
 		}
+
+		spiffeID := connect.SpiffeIDService{
+			Host:       cfgSnap.Roots.TrustDomain,
+			Partition:  uid.PartitionOrDefault(),
+			Namespace:  uid.NamespaceOrDefault(),
+			Datacenter: cfgSnap.Datacenter,
+			Service:    uid.Name,
+		}
+
+		commonTLSContext := makeCommonTLSContext(
+			cfgSnap.Leaf(),
+			cfgSnap.RootPEMs(),
+			makeTLSParametersFromProxyTLSConfig(cfgSnap.MeshConfigTLSOutgoing()),
+		)
+		err := injectSANMatcher(commonTLSContext, spiffeID.URI().String())
+		if err != nil {
+			return nil, fmt.Errorf("failed to inject SAN matcher rules for cluster %q: %v", sni, err)
+		}
+		tlsContext := envoy_tls_v3.UpstreamTlsContext{
+			CommonTlsContext: commonTLSContext,
+			Sni:              sni,
+		}
+		transportSocket, err := makeUpstreamTLSTransportSocket(&tlsContext)
+		if err != nil {
+			return nil, err
+		}
+		cluster.TransportSocket = transportSocket
+		clusters = append(clusters, cluster)
 	}
 
 	return clusters, nil

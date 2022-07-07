@@ -62,26 +62,24 @@
     {
       "@type": "type.googleapis.com/envoy.config.cluster.v3.Cluster",
       "name": "destination~google.default.dc1.internal.11111111-2222-3333-4444-555555555555.consul",
-      "type": "STATIC",
+      "altStatName": "destination~google.default.dc1.internal.11111111-2222-3333-4444-555555555555.consul",
+      "type": "EDS",
+      "edsClusterConfig": {
+        "edsConfig": {
+          "ads": {
+
+          },
+          "resourceApiVersion": "V3"
+        }
+      },
       "connectTimeout": "5s",
-      "loadAssignment": {
-        "clusterName": "destination~google.default.dc1.internal.11111111-2222-3333-4444-555555555555.consul",
-        "endpoints": [
-          {
-            "lbEndpoints": [
-              {
-                "endpoint": {
-                  "address": {
-                    "socketAddress": {
-                      "address": "172.168.0.1",
-                      "portValue": 8443
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        ]
+      "outlierDetection": {
+
+      },
+      "commonLbConfig": {
+        "healthyPanicThreshold": {
+
+        }
       },
       "transportSocket": {
         "name": "tls",
@@ -119,26 +117,24 @@
     {
       "@type": "type.googleapis.com/envoy.config.cluster.v3.Cluster",
       "name": "destination~kafka.default.dc1.internal.11111111-2222-3333-4444-555555555555.consul",
-      "type": "STATIC",
+      "altStatName": "destination~kafka.default.dc1.internal.11111111-2222-3333-4444-555555555555.consul",
+      "type": "EDS",
+      "edsClusterConfig": {
+        "edsConfig": {
+          "ads": {
+
+          },
+          "resourceApiVersion": "V3"
+        }
+      },
       "connectTimeout": "5s",
-      "loadAssignment": {
-        "clusterName": "destination~kafka.default.dc1.internal.11111111-2222-3333-4444-555555555555.consul",
-        "endpoints": [
-          {
-            "lbEndpoints": [
-              {
-                "endpoint": {
-                  "address": {
-                    "socketAddress": {
-                      "address": "172.168.0.1",
-                      "portValue": 8443
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        ]
+      "outlierDetection": {
+
+      },
+      "commonLbConfig": {
+        "healthyPanicThreshold": {
+
+        }
       },
       "transportSocket": {
         "name": "tls",

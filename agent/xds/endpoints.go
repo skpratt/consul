@@ -149,6 +149,20 @@ func (s *ResourceGenerator) endpointsFromSnapshotConnectProxy(cfgSnap *proxycfg.
 		}
 	}
 
+	// Loop over potential terminating gateways in the mesh
+	for uid, endpoints := range cfgSnap.ConnectProxy.DestinationGateways {
+		name := clusterNameForDestination(cfgSnap, uid)
+
+		la := makeLoadAssignment(
+			name,
+			[]loadAssignmentEndpointGroup{
+				{Endpoints: endpoints},
+			},
+			proxycfg.GatewayKey{ /*empty so it never matches*/ },
+		)
+		resources = append(resources, la)
+	}
+
 	return resources, nil
 }
 

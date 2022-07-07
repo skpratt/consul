@@ -4,6 +4,7 @@ import (
 	"context"
 	crand "crypto/rand"
 	"fmt"
+	"github.com/hashicorp/consul/acl"
 	"reflect"
 	"sort"
 	"strings"
@@ -5353,7 +5354,7 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	ws := memdb.NewWatchSet()
 	idx, nodes, err := s.GatewayServices(ws, "db", nil)
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(0))
+	assert.Equal(t, uint64(0), idx)
 	assert.Len(t, nodes, 0)
 
 	// Create some nodes
@@ -5407,27 +5408,34 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 
 	// Read everything back.
 	ws = memdb.NewWatchSet()
-	idx, out, err := s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err := s.ServiceGateways(ws, "db", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(21))
+	assert.Equal(t, uint64(21), idx)
 	assert.Len(t, out, 1)
 
-	expect := structs.ServiceNodes{
+	expect := structs.CheckServiceNodes{
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway",
-			ServiceName:    "gateway",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 	}
@@ -5448,27 +5456,34 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	}))
 	assert.False(t, watchFired(ws))
 
-	idx, out, err = s.ServiceGateways(ws, "api", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err = s.ServiceGateways(ws, "api", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(21))
+	assert.Equal(t, uint64(21), idx)
 	assert.Len(t, out, 1)
 
-	expect = structs.ServiceNodes{
+	expect = structs.CheckServiceNodes{
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway",
-			ServiceName:    "gateway",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 	}
@@ -5502,27 +5517,34 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 
 	// Read everything back.
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err = s.ServiceGateways(ws, "db", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(22))
+	assert.Equal(t, uint64(22), idx)
 	assert.Len(t, out, 1)
 
-	expect = structs.ServiceNodes{
+	expect = structs.CheckServiceNodes{
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway",
-			ServiceName:    "gateway",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 	}
@@ -5532,40 +5554,48 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	assert.Nil(t, s.EnsureService(23, "bar", &structs.NodeService{ID: "redis", Service: "redis", Tags: nil, Address: "", Port: 6379}))
 
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "redis", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err = s.ServiceGateways(ws, "redis", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(23))
+	assert.Equal(t, uint64(23), idx)
 	assert.Len(t, out, 1)
 
-	expect = structs.ServiceNodes{
+	expect = structs.CheckServiceNodes{
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway",
-			ServiceName:    "gateway",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 	}
 	assert.Equal(t, expect, out)
 
 	// Delete a service covered by wildcard
-	assert.Nil(t, s.DeleteService(24, "bar", "redis", nil, ""))
+	assert.Nil(t, s.DeleteService(24, "bar", "redis", structs.DefaultEnterpriseMetaInDefaultPartition(), ""))
 	assert.True(t, watchFired(ws))
 
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "bar", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err = s.ServiceGateways(ws, "redis", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(24))
+	// TODO: wildcards don't keep the same extinction index
+	assert.Equal(t, uint64(0), idx)
 	assert.Len(t, out, 0)
 
 	// Update the entry that only leaves one service
@@ -5580,28 +5610,36 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 	}))
 	assert.True(t, watchFired(ws))
 
-	idx, out, err = s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	ws = memdb.NewWatchSet()
+	idx, out, err = s.ServiceGateways(ws, "db", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(25))
+	assert.Equal(t, uint64(25), idx)
 	assert.Len(t, out, 1)
 
 	// previously associated services should not be present
-	expect = structs.ServiceNodes{
+	expect = structs.CheckServiceNodes{
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway",
-			ServiceName:    "gateway",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 	}
@@ -5617,58 +5655,89 @@ func TestStateStore_ServiceGateways_Terminating(t *testing.T) {
 			},
 		},
 	}))
+
+	// check that watchset fired for new terminating gateway node service
 	assert.Nil(t, s.EnsureService(20, "baz", &structs.NodeService{Kind: structs.ServiceKindTerminatingGateway, ID: "gateway2", Service: "gateway2", Port: 443}))
+	assert.True(t, watchFired(ws))
+
 	ws = memdb.NewWatchSet()
-	idx, out, err = s.ServiceGateways(ws, "db", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err = s.ServiceGateways(ws, "db", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(26))
+	assert.Equal(t, uint64(26), idx)
 	assert.Len(t, out, 2)
 
-	expect = structs.ServiceNodes{
+	expect = structs.CheckServiceNodes{
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway",
-			ServiceName:    "gateway",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 		{
-			ID:             "",
-			Address:        "127.0.0.2",
-			Node:           "baz",
-			ServiceKind:    structs.ServiceKindTerminatingGateway,
-			ServiceID:      "gateway2",
-			ServiceName:    "gateway2",
-			EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
-			ServiceTags:    []string{},
-			ServiceWeights: structs.Weights{Passing: 1, Warning: 1},
-			ServiceMeta:    map[string]string{},
-			ServicePort:    443,
-			RaftIndex: structs.RaftIndex{
-				CreateIndex: 20,
-				ModifyIndex: 20,
+			Node: &structs.Node{
+				ID:        "",
+				Address:   "127.0.0.2",
+				Node:      "baz",
+				Partition: acl.DefaultPartitionName,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 12,
+					ModifyIndex: 12,
+				},
+			},
+			Service: &structs.NodeService{
+				Service:        "gateway2",
+				Kind:           structs.ServiceKindTerminatingGateway,
+				ID:             "gateway2",
+				EnterpriseMeta: *structs.DefaultEnterpriseMetaInDefaultPartition(),
+				Weights:        &structs.Weights{Passing: 1, Warning: 1},
+				Port:           443,
+				RaftIndex: structs.RaftIndex{
+					CreateIndex: 20,
+					ModifyIndex: 20,
+				},
 			},
 		},
 	}
 	assert.Equal(t, expect, out)
 
-	// Deleting the config entry should remove existing mappings
-	assert.Nil(t, s.DeleteConfigEntry(27, "terminating-gateway", "gateway", nil))
+	// Deleting the all gateway's node services should trigger the watch and keep the raft index stable
+	assert.Nil(t, s.DeleteService(27, "baz", "gateway", structs.DefaultEnterpriseMetaInDefaultPartition(), structs.DefaultPeerKeyword))
+	assert.True(t, watchFired(ws))
+	assert.Nil(t, s.DeleteService(28, "baz", "gateway2", structs.DefaultEnterpriseMetaInDefaultPartition(), structs.DefaultPeerKeyword))
+
+	ws = memdb.NewWatchSet()
+	idx, out, err = s.ServiceGateways(ws, "db", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
+	assert.Nil(t, err)
+	assert.Equal(t, uint64(28), idx)
+	assert.Len(t, out, 0)
+
+	// Deleting the config entry even with a node service should remove existing mappings
+	assert.Nil(t, s.EnsureService(29, "baz", &structs.NodeService{Kind: structs.ServiceKindTerminatingGateway, ID: "gateway", Service: "gateway", Port: 443}))
+	assert.Nil(t, s.DeleteConfigEntry(30, "terminating-gateway", "gateway", nil))
 	assert.True(t, watchFired(ws))
 
-	idx, out, err = s.ServiceGateways(ws, "gateway", *structs.DefaultEnterpriseMetaInDefaultPartition())
+	idx, out, err = s.ServiceGateways(ws, "api", structs.ServiceKindTerminatingGateway, *structs.DefaultEnterpriseMetaInDefaultPartition())
 	assert.Nil(t, err)
-	assert.Equal(t, idx, uint64(27))
+	// TODO: similar to ingress, the index can backslide if the config is deleted.
+	assert.Equal(t, uint64(28), idx)
 	assert.Len(t, out, 0)
 }
 
