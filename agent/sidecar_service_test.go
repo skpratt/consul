@@ -2,9 +2,10 @@ package agent
 
 import (
 	"fmt"
-	"github.com/hashicorp/consul/acl"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/consul/acl"
 
 	"github.com/stretchr/testify/require"
 
